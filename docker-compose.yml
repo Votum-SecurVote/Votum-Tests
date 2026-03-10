@@ -35,29 +35,32 @@ services:
         condition: service_healthy
     restart: on-failure
 
-  # votum-admin:
-  #   image: votum-admin:1.0
-  #   container_name: votum-admin
-  #   ports:
-  #     - "3000:80"
-  #   depends_on:
-  #     - votum-backend
+  votum-admin:
+    image: votum-admin-frontend:latest
+    pull_policy: never
+    container_name: votum-admin
+    ports:
+      - "3000:80"
+    depends_on:
+      - votum-backend
 
-  # votum-kiosk:
-  #   image: votum-kiosk:1.0
-  #   container_name: votum-kiosk
-  #   ports:
-  #     - "3001:80"
-  #   depends_on:
-  #     - votum-backend
+  votum-kiosk:
+    image: votum-kiosk:latest
+    pull_policy: never
+    container_name: votum-kiosk
+    ports:
+      - "3001:80"
+    depends_on:
+      - votum-backend
 
-  # votum-userreg:
-  #   image: votum-userreg:1.0
-  #   container_name: votum-userreg
-  #   ports:
-  #     - "3002:80"
-  #   depends_on:
-  #     - votum-backend
+  votum-userreg:
+    image: votum-user:latest
+    pull_policy: never
+    container_name: votum-userreg
+    ports:
+      - "3002:80"
+    depends_on:
+      - votum-backend
 
 volumes:
   postgres_data:

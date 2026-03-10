@@ -5,18 +5,33 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 dotenv.config();
 
 const { Pool } = pg;
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'votumdb',
-  user: process.env.DB_USER || 'votum',
-  password: process.env.DB_PASSWORD || 'votum_secret',
-});
+let pool = null;
+
+function getPool() {
+  if (!pool) {
+    pool = new Pool({
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'votumdb',
+      user: process.env.DB_USER || 'votum',
+      password: process.env.DB_PASSWORD || 'votum_secret',
+    });
+  }
+  return pool;
+}
+
+/**
+ * Hash aadhaar the same way the backend does: SHA-256 → Base64.
+ */
+function hashAadhaar(aadhaarNumber) {
+  return crypto.createHash('sha256').update(String(aadhaarNumber)).digest('base64');
+}
 
 /**
  * Seed the admin user into the admins table.
@@ -24,11 +39,11 @@ const pool = new Pool({
  */
 export async function seedAdmin() {
   const hashedPassword = await bcrypt.hash('Admin@1234', 10);
-  await pool.query(
-    `INSERT INTO admins (name, email, password, role)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password`,
-    ['Test Admin', 'admin@votum.test', hashedPassword, 'ADMIN']
+  await getPool().query(
+    `INSERT INTO admins (id, full_name, email, password_hash, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, NOW(), NOW())
+     ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
+    ['Test Admin', 'admin@votum.test', hashedPassword]
   );
 }
 
@@ -39,14 +54,18 @@ export async function seedAdmin() {
  */
 export async function seedApprovedUser(user) {
   const hashedPassword = await bcrypt.hash(user.password, 10);
-  const result = await pool.query(
-    `INSERT INTO users (name, email, phone, password, aadhaar_number, status, role)
-     VALUES ($1, $2, $3, $4, $5, 'APPROVED', 'USER')
+  const hashedAadhaar  = hashAadhaar(user.aadhaarNumber);
+  const result = await getPool().query(
+    `INSERT INTO users (id, full_name, email, phone, password_hash, aadhaar_hash, status, role,
+                        dob, address, gender, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, 'APPROVED', 'USER',
+             '1990-01-01', '123 Test Street', 'MALE', NOW(), NOW())
      ON CONFLICT (email) DO UPDATE
-       SET password = EXCLUDED.password,
-           status   = 'APPROVED'
+       SET password_hash = EXCLUDED.password_hash,
+           aadhaar_hash  = EXCLUDED.aadhaar_hash,
+           status        = 'APPROVED'
      RETURNING *`,
-    [user.name, user.email, user.phone, hashedPassword, user.aadhaarNumber]
+    [user.name, user.email, user.phone, hashedPassword, hashedAadhaar]
   );
   return result.rows[0];
 }
@@ -58,14 +77,18 @@ export async function seedApprovedUser(user) {
  */
 export async function seedPendingUser(user) {
   const hashedPassword = await bcrypt.hash(user.password, 10);
-  const result = await pool.query(
-    `INSERT INTO users (name, email, phone, password, aadhaar_number, status, role)
-     VALUES ($1, $2, $3, $4, $5, 'PENDING', 'USER')
+  const hashedAadhaar  = hashAadhaar(user.aadhaarNumber);
+  const result = await getPool().query(
+    `INSERT INTO users (id, full_name, email, phone, password_hash, aadhaar_hash, status, role,
+                        dob, address, gender, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, 'PENDING', 'USER',
+             '1990-01-01', '123 Test Street', 'MALE', NOW(), NOW())
      ON CONFLICT (email) DO UPDATE
-       SET password = EXCLUDED.password,
-           status   = 'PENDING'
+       SET password_hash = EXCLUDED.password_hash,
+           aadhaar_hash  = EXCLUDED.aadhaar_hash,
+           status        = 'PENDING'
      RETURNING *`,
-    [user.name, user.email, user.phone, hashedPassword, user.aadhaarNumber]
+    [user.name, user.email, user.phone, hashedPassword, hashedAadhaar]
   );
   return result.rows[0];
 }
@@ -78,17 +101,17 @@ export async function seedPendingUser(user) {
  * @returns {Promise<{ election, ballot, candidates }>}
  */
 export async function seedElection(electionData, ballotData, candidates = []) {
-  const electionResult = await pool.query(
-    `INSERT INTO elections (title, description, start_date, end_date, status)
-     VALUES ($1, $2, $3, $4, 'ACTIVE')
+  const electionResult = await getPool().query(
+    `INSERT INTO elections (id, title, description, start_date, end_date, status, created_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, 'PUBLISHED', NOW())
      RETURNING *`,
     [electionData.title, electionData.description, electionData.startDate, electionData.endDate]
   );
   const election = electionResult.rows[0];
 
-  const ballotResult = await pool.query(
-    `INSERT INTO ballots (election_id, title, description)
-     VALUES ($1, $2, $3)
+  const ballotResult = await getPool().query(
+    `INSERT INTO ballots (id, election_id, title, description, status, created_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, 'ACTIVE', NOW())
      RETURNING *`,
     [election.id, ballotData.title, ballotData.description]
   );
@@ -96,11 +119,11 @@ export async function seedElection(electionData, ballotData, candidates = []) {
 
   const seededCandidates = [];
   for (const candidate of candidates) {
-    const candResult = await pool.query(
-      `INSERT INTO candidates (ballot_id, name, party, description)
-       VALUES ($1, $2, $3, $4)
+    const candResult = await getPool().query(
+      `INSERT INTO candidates (id, ballot_id, name, party, created_at)
+       VALUES (gen_random_uuid(), $1, $2, $3, NOW())
        RETURNING *`,
-      [ballot.id, candidate.name, candidate.party, candidate.description]
+      [ballot.id, candidate.name, candidate.party]
     );
     seededCandidates.push(candResult.rows[0]);
   }
@@ -113,7 +136,7 @@ export async function seedElection(electionData, ballotData, candidates = []) {
  * Safe to call between tests.
  */
 export async function cleanAll() {
-  await pool.query(`
+  await getPool().query(`
     TRUNCATE TABLE votes, candidates, ballots, elections, users
     RESTART IDENTITY CASCADE
   `);
@@ -123,15 +146,18 @@ export async function cleanAll() {
  * Clean only user and vote data (keep elections/ballots intact).
  */
 export async function cleanUsers() {
-  await pool.query(`
+  await getPool().query(`
     TRUNCATE TABLE votes, users
     RESTART IDENTITY CASCADE
   `);
 }
 
 /**
- * Close the database pool — call in afterAll hooks.
+ * Close the database pool — call only once, after ALL test suites finish.
  */
 export async function closePool() {
-  await pool.end();
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
 }

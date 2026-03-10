@@ -9,7 +9,6 @@ import {
   seedAdmin,
   seedApprovedUser,
   cleanUsers,
-  closePool,
 } from '../../../helpers/db-seeder.js';
 import usersFixture from '../../../fixtures/users.json' with { type: 'json' };
 
@@ -29,7 +28,6 @@ test.describe('User Registration @e2e @registration', () => {
 
   test.afterAll(async () => {
     await cleanUsers();
-    await closePool();
   });
 
   test('E2E-REG-001: Register a new user with all required fields returns 200 or 201', async () => {
@@ -61,13 +59,12 @@ test.describe('User Registration @e2e @registration', () => {
 
     // Act
     const response = await registerUser(testUser, PHOTO_PATH, AADHAAR_PATH);
-    const body = await response.json();
+    const text = await response.text();
 
-    // Assert
+    // Assert — backend returns plain text success message
     expect([200, 201]).toContain(response.status());
-    if (body.status) {
-      expect(body.status.toUpperCase()).toBe('PENDING');
-    }
+    // Message indicates pending/awaiting approval
+    expect(text.toLowerCase()).toMatch(/register|success|pending|approval/i);
   });
 
   test('E2E-REG-003: Registering with a duplicate email returns 409 or 400', async () => {

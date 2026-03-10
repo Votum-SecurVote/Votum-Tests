@@ -11,7 +11,6 @@ import {
 import {
   seedAdmin,
   cleanAll,
-  closePool,
 } from '../../../helpers/db-seeder.js';
 import usersFixture     from '../../../fixtures/users.json'     with { type: 'json' };
 import electionsFixture from '../../../fixtures/elections.json' with { type: 'json' };
@@ -29,13 +28,11 @@ test.describe('Create Election @e2e @admin', () => {
       usersFixture.admin.email,
       usersFixture.admin.password
     );
-    const body = await response.json();
-    adminToken = body.token;
+    adminToken = await response.text();
   });
 
   test.afterAll(async () => {
     await cleanAll();
-    await closePool();
   });
 
   test('E2E-ADMIN-001: Admin can create a new election — returns 200 or 201 with election data', async () => {
