@@ -1,0 +1,44 @@
+{
+  "activeElection": {
+    "title": "General Election 2026",
+    "description": "Annual general election for the community",
+    "startDate": "2026-03-01T00:00:00",
+    "endDate": "2026-12-31T23:59:59"
+  },
+  "ballot": {
+    "title": "Presidential Ballot",
+    "description": "Choose your preferred presidential candidate"
+  },
+  "candidates": [
+    {
+      "name": "Alice Johnson",
+      "party": "Progressive Party",
+      "description": "Candidate A — focus on technology and education"
+    },
+    {
+      "name": "Bob Smith",
+      "party": "Conservative Party",
+      "description": "Candidate B — focus on economy and security"
+    },
+    {
+      "name": "Carol Williams",
+      "party": "Green Party",
+      "description": "Candidate C — focus on environment and sustainability"
+    }
+  ],
+  "newElection": {
+    "title": "Local Council Election 2026",
+    "description": "Election for local council representatives",
+    "startDate": "2026-04-01T00:00:00",
+    "endDate": "2026-04-30T23:59:59"
+  },
+  "newBallot": {
+    "title": "Council Seat A",
+    "description": "Choose the representative for Council Seat A"
+  },
+  "newCandidate": {
+    "name": "David Lee",
+    "party": "Independent",
+    "description": "Independent candidate for council seat"
+  }
+}

@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: votum-postgres
+    environment:
+      POSTGRES_DB: votumdb
+      POSTGRES_USER: votum
+      POSTGRES_PASSWORD: votum_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U votum -d votumdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  votum-backend:
+    image: votum-backend:1.0
+    pull_policy: never
+    container_name: votum-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/votumdb
+      SPRING_DATASOURCE_USERNAME: votum
+      SPRING_DATASOURCE_PASSWORD: votum_secret
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: votum_jwt_secret_key_for_testing_only_32chars
+      JWT_EXPIRATION: 86400000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  # votum-admin:
+  #   image: votum-admin:1.0
+  #   container_name: votum-admin
+  #   ports:
+  #     - "3000:80"
+  #   depends_on:
+  #     - votum-backend
+
+  # votum-kiosk:
+  #   image: votum-kiosk:1.0
+  #   container_name: votum-kiosk
+  #   ports:
+  #     - "3001:80"
+  #   depends_on:
+  #     - votum-backend
+
+  # votum-userreg:
+  #   image: votum-userreg:1.0
+  #   container_name: votum-userreg
+  #   ports:
+  #     - "3002:80"
+  #   depends_on:
+  #     - votum-backend
+
+volumes:
+  postgres_data:

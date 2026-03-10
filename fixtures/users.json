@@ -1,0 +1,43 @@
+{
+  "admin": {
+    "name": "Test Admin",
+    "email": "admin@votum.test",
+    "password": "Admin@1234",
+    "role": "ADMIN"
+  },
+  "approvedVoter": {
+    "name": "Approved Voter",
+    "email": "approved.voter@votum.test",
+    "phone": "9876543210",
+    "password": "Voter@1234",
+    "aadhaarNumber": "123456789012",
+    "role": "USER",
+    "status": "APPROVED"
+  },
+  "pendingVoter": {
+    "name": "Pending Voter",
+    "email": "pending.voter@votum.test",
+    "phone": "9876543211",
+    "password": "Voter@5678",
+    "aadhaarNumber": "210987654321",
+    "role": "USER",
+    "status": "PENDING"
+  },
+  "newRegistrant": {
+    "name": "New Registrant",
+    "email": "new.registrant@votum.test",
+    "phone": "9123456780",
+    "password": "NewUser@9999",
+    "aadhaarNumber": "111122223333",
+    "role": "USER",
+    "status": "PENDING"
+  },
+  "duplicateRegistrant": {
+    "name": "Duplicate User",
+    "email": "approved.voter@votum.test",
+    "phone": "9000000001",
+    "password": "Dup@1234",
+    "aadhaarNumber": "444455556666",
+    "role": "USER"
+  }
+}

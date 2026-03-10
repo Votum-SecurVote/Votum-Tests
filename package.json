@@ -1,0 +1,27 @@
+{
+  "name": "votum-tests",
+  "version": "1.0.0",
+  "description": "End-to-end and smoke tests for Votum SecureVote platform",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:e2e": "playwright test --grep @e2e",
+    "test:regression": "playwright test --grep \"@e2e|@smoke\"",
+    "test:auth": "playwright test --grep @auth",
+    "test:voting": "playwright test --grep @voting",
+    "test:admin": "playwright test --grep @admin",
+    "test:registration": "playwright test --grep @registration",
+    "test:report": "playwright show-report",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.0",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.11.3"
+  }
+}
