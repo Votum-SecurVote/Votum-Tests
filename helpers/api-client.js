@@ -73,44 +73,40 @@ export async function userLogin(email, password) {
 /**
  * POST /api/auth/register
  * Multipart form-data: "data" part (JSON blob) + "photo" (image) + "aadhaarPdf" (PDF).
+ * Uses the native FormData / Blob (Node 18+) so it works with native fetch.
  * @param {object} userData - { name, email, phone, password, aadhaarNumber, dob?, address?, gender? }
  * @param {string|null} photoPath - absolute path to photo file
  * @param {string|null} aadhaarPdfPath - absolute path to aadhaar PDF
  */
 export async function registerUser(userData, photoPath = null, aadhaarPdfPath = null) {
-  const form = new FormData();
+  // Use native FormData (Node 18+) — works correctly with native fetch
+  const form = new globalThis.FormData();
 
-  // Backend expects a single "data" JSON blob with these exact field names
-  const dataBlob = JSON.stringify({
-    fullName:  userData.name || userData.fullName,
-    email:     userData.email,
-    phone:     userData.phone,
-    password:  userData.password,
-    aadhaar:   userData.aadhaarNumber || userData.aadhaar,
-    dob:       userData.dob       || '1990-01-01',
-    address:   userData.address   || '123 Test Street',
-    gender:    userData.gender    || 'MALE',
+  // Backend expects a single "data" JSON blob part
+  const dataJson = JSON.stringify({
+    fullName: userData.name || userData.fullName,
+    email:    userData.email,
+    phone:    userData.phone,
+    password: userData.password,
+    aadhaar:  userData.aadhaarNumber || userData.aadhaar,
+    dob:      userData.dob     || '1990-01-01',
+    address:  userData.address || '123 Test Street',
+    gender:   userData.gender  || 'MALE',
   });
-  form.append('data', dataBlob, { contentType: 'application/json', filename: 'data.json' });
+  form.append('data', new Blob([dataJson], { type: 'application/json' }), 'data.json');
 
-  if (photoPath && fs.existsSync(photoPath)) {
-    form.append('photo', fs.createReadStream(photoPath), { filename: 'photo.jpg', contentType: 'image/jpeg' });
-  } else {
-    // Backend requires photo — send a minimal 1-byte placeholder
-    form.append('photo', Buffer.from('placeholder'), { filename: 'photo.jpg', contentType: 'image/jpeg' });
-  }
+  const photoBytes  = (photoPath && fs.existsSync(photoPath))
+    ? fs.readFileSync(photoPath)
+    : Buffer.from('placeholder');
+  form.append('photo', new Blob([photoBytes], { type: 'image/jpeg' }), 'photo.jpg');
 
-  if (aadhaarPdfPath && fs.existsSync(aadhaarPdfPath)) {
-    form.append('aadhaarPdf', fs.createReadStream(aadhaarPdfPath), { filename: 'aadhaar.pdf', contentType: 'application/pdf' });
-  } else {
-    // Backend requires aadhaarPdf — send a minimal placeholder
-    form.append('aadhaarPdf', Buffer.from('placeholder'), { filename: 'aadhaar.pdf', contentType: 'application/pdf' });
-  }
+  const pdfBytes = (aadhaarPdfPath && fs.existsSync(aadhaarPdfPath))
+    ? fs.readFileSync(aadhaarPdfPath)
+    : Buffer.from('placeholder');
+  form.append('aadhaarPdf', new Blob([pdfBytes], { type: 'application/pdf' }), 'aadhaar.pdf');
 
-  const headers = form.getHeaders();
   const response = await fetch(`${BASE_URL}/api/auth/register`, {
     method: 'POST',
-    headers,
     body: form,
   });
   return wrap(response);
@@ -186,10 +182,11 @@ export async function addCandidate(ballotId, candidateData, token) {
     filename: 'request.json',
   });
   const headers = { ...form.getHeaders(), Authorization: `Bearer ${token}` };
+  // Native fetch requires a buffer, not a form-data stream
   const response = await fetch(`${BASE_URL}/api/admin/ballots/${ballotId}/candidates`, {
     method: 'POST',
     headers,
-    body: form,
+    body: form.getBuffer(),
   });
   return wrap(response);
 }
