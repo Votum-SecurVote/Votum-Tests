@@ -45,14 +45,14 @@ test.describe('Admin Login @e2e @auth @admin', () => {
     expect(response.status()).toBeLessThan(500);
   });
 
-  test('E2E-AUTH-004: Admin JWT token can access protected endpoint GET /api/admin/users/pending', async () => {
+  test('E2E-AUTH-004: Admin JWT token can access protected endpoint GET /api/admin/pending-users', async () => {
     // Arrange
     const loginResponse = await adminLogin(adminFixture.admin.email, adminFixture.admin.password);
     const token = await loginResponse.text();
 
     // Act
     const protectedResponse = await fetch(
-      `${process.env.BASE_URL || 'http://localhost:8080'}/api/admin/users/pending`,
+      `${process.env.BASE_URL || 'http://localhost:8080'}/api/admin/pending-users`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -63,7 +63,7 @@ test.describe('Admin Login @e2e @auth @admin', () => {
   test('E2E-AUTH-005: Request to protected admin endpoint without token returns 401 or 403', async () => {
     // Act — no Authorization header
     const response = await fetch(
-      `${process.env.BASE_URL || 'http://localhost:8080'}/api/admin/users/pending`
+      `${process.env.BASE_URL || 'http://localhost:8080'}/api/admin/pending-users`
     );
 
     // Assert
