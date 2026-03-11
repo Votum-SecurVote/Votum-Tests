@@ -1,48 +1,7 @@
 # Votum-Tests
 
-End-to-end and smoke test suite for the **Votum SecureVote** platform.  
-Tests are written in **Playwright + JavaScript (ESM)** and hit real running services — no mocking.
-
----
-
-## Architecture
-
-```
-Votum-Tests/
-├── docker-compose.yml          # PostgreSQL + votum-backend (+ commented-out frontends)
-├── playwright.config.js        # Playwright configuration
-├── package.json
-├── .env.example                # Copy to .env before running
-│
-├── helpers/
-│   ├── api-client.js           # Reusable HTTP client for all API endpoints
-│   └── db-seeder.js            # PostgreSQL seeder / cleaner
-│
-├── fixtures/
-│   ├── users.json              # Test user data
-│   ├── elections.json          # Test election / candidate data
-│   ├── test-photo.jpg          # Placeholder photo for upload tests
-│   └── test-aadhaar.pdf        # Placeholder Aadhaar PDF for upload tests
-│
-├── docker/
-│   └── init-db.sql             # PostgreSQL schema initialisation
-│
-└── tests/
-    ├── smoke/
-    │   └── backend-health.spec.js
-    └── e2e/
-        ├── auth/
-        │   ├── admin-login.spec.js
-        │   └── user-login.spec.js
-        ├── voting/
-        │   ├── cast-vote.spec.js
-        │   └── results.spec.js
-        ├── admin/
-        │   ├── create-election.spec.js
-        │   └── approve-users.spec.js
-        └── registration/
-            └── register-user.spec.js
-```
+End-to-end , Regression and smoke test suite for the **Votum SecureVote** platform.  
+Tests are written in **Playwright + JavaScript (ESM)** and hit real running services .
 
 ---
 
@@ -53,13 +12,6 @@ Votum-Tests/
 | Node.js     | ≥ 18     |
 | Docker      | ≥ 24     |
 | docker-compose | ≥ 2   |
-
-The backend Docker image **`votum-backend:1.0`** must already be built locally:
-
-```bash
-# In the Votum-backend repository:
-docker build -t votum-backend:1.0 .
-```
 
 ---
 
@@ -133,55 +85,6 @@ To also remove the PostgreSQL volume:
 ```bash
 docker-compose down -v
 ```
-
----
-
-## Test ID Reference
-
-| ID              | Description                                      |
-|-----------------|--------------------------------------------------|
-| SMOKE-001–010   | Backend endpoint reachability checks             |
-| E2E-AUTH-001    | Admin login → JWT                                |
-| E2E-AUTH-002    | Admin login → wrong password → 401              |
-| E2E-AUTH-003    | Admin login → unknown email → 401               |
-| E2E-AUTH-004    | Admin JWT → access protected endpoint           |
-| E2E-AUTH-005    | No token → protected endpoint → 401/403         |
-| E2E-AUTH-006    | User login → JWT                                 |
-| E2E-AUTH-007    | User login → wrong password → 401               |
-| E2E-AUTH-008    | User JWT → GET /api/user/profile                |
-| E2E-AUTH-009    | No token → /api/user/profile → 401/403          |
-| E2E-AUTH-010    | User token → admin endpoint → 401/403           |
-| E2E-VOTE-001    | Kiosk login → JWT                                |
-| E2E-VOTE-002    | GET active election                              |
-| E2E-VOTE-003    | GET ballots for election                         |
-| E2E-VOTE-004    | GET candidates for ballot                        |
-| E2E-VOTE-005    | hasVoted → false before voting                  |
-| E2E-VOTE-006    | Cast valid vote → 200                           |
-| E2E-VOTE-007    | hasVoted → true after voting                    |
-| E2E-VOTE-008    | Double vote → 400/409                           |
-| E2E-VOTE-009    | Unauthenticated vote → 401/403                  |
-| E2E-VOTE-010    | Admin GET election results → 200                |
-| E2E-VOTE-011    | Results contain vote count data                 |
-| E2E-VOTE-012    | Non-admin cannot access results → 401/403       |
-| E2E-VOTE-013    | GET results non-existent election → 404         |
-| E2E-ADMIN-001   | Create election → 200/201                       |
-| E2E-ADMIN-002   | Add ballot to election                          |
-| E2E-ADMIN-003   | Add candidate to ballot                         |
-| E2E-ADMIN-004   | Full create flow                                |
-| E2E-ADMIN-005   | Create election without auth → 401/403          |
-| E2E-ADMIN-006   | Create election missing fields → 400            |
-| E2E-ADMIN-007   | GET pending users                               |
-| E2E-ADMIN-008   | Approve pending user                            |
-| E2E-ADMIN-009   | Approved user not in pending list               |
-| E2E-ADMIN-010   | Reject pending user                             |
-| E2E-ADMIN-011   | GET pending without token → 401/403             |
-| E2E-ADMIN-012   | Approve non-existent user → 404                 |
-| E2E-REG-001     | Register new user → 200/201                     |
-| E2E-REG-002     | Registered user status is PENDING              |
-| E2E-REG-003     | Duplicate email → 400/409                       |
-| E2E-REG-004     | Missing required fields → 400                  |
-| E2E-REG-005     | Photo optional (200/201 or 400)                 |
-| E2E-REG-006     | Duplicate Aadhaar → 400/409                     |
 
 ---
 
