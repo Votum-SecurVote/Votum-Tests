@@ -1,6 +1,6 @@
 # Votum-Tests
 
-End-to-end , Regression and smoke test suite for the **Votum SecureVote** platform.  
+End-to-end, Regression and smoke test suite for the **Votum SecureVote** platform.  
 Tests are written in **Playwright + JavaScript (ESM)** and hit real running services .
 
 ---
